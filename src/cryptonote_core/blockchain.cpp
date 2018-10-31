@@ -3974,9 +3974,9 @@ void Blockchain::block_longhash_worker(cn_pow_hash_v3& hash_ctx, const std::vect
   {
     if (m_cancel)
        break;
+    crypto::hash id = get_block_hash(block);
     crypto::hash pow;
 		get_block_longhash(block, hash_ctx, pow);
-    crypto::hash pow = get_block_longhash(block, height++);
     map.emplace(id, pow);
   }
 
