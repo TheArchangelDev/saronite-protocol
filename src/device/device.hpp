@@ -125,7 +125,7 @@ namespace hw {
         /* ======================================================================= */
         virtual bool  get_public_address(cryptonote::account_public_address &pubkey) = 0;
         virtual bool  get_secret_keys(crypto::secret_key &viewkey , crypto::secret_key &spendkey)  = 0;
-        virtual bool  generate_chacha_key(const cryptonote::account_keys &keys, crypto::chacha_key &key) = 0;
+        virtual bool  generate_chacha8_key(const cryptonote::account_keys &keys, crypto::chacha8_key &key) = 0;
 
         /* ======================================================================= */
         /*                               SUB ADDRESS                               */
