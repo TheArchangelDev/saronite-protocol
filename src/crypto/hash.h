@@ -72,26 +72,6 @@ namespace crypto {
     return h;
   }
 
-  inline void cn_slow_hash(const void *data, std::size_t length, hash &hash, int variant = 0) {
-    static thread_local cn_pow_hash_v2 ctx2;
-    static thread_local cn_pow_hash_v1 ctx1 = cn_pow_hash_v1::make_borrowed(ctx2);
-    if (variant == 0) {
-      ctx1.hash(data, length, hash.data);
-    } else {
-      ctx2.hash(data, length, hash.data);
-    }
-  }
-
-  inline void cn_slow_hash_prehashed(const void *data, std::size_t length, hash &hash, int variant = 0) {
-    static thread_local cn_pow_hash_v2 ctx2;
-    static thread_local cn_pow_hash_v1 ctx1 = cn_pow_hash_v1::make_borrowed(ctx2);
-    if (variant == 0) {
-      ctx1.hash(data, length, hash.data, true);
-    } else {
-      ctx2.hash(data, length, hash.data, true);
-    }
-  }
-
   inline void tree_hash(const hash *hashes, std::size_t count, hash &root_hash) {
     tree_hash(reinterpret_cast<const char (*)[HASH_SIZE]>(hashes), count, reinterpret_cast<char *>(&root_hash));
   }
