@@ -514,7 +514,7 @@ void cn_slow_hash<MEMORY,ITER,VERSION>::software_hash(const void* in, size_t len
 			asm volatile ("nop"); //Fix for RasPi3 ARM - maybe needed on armv8 
 #endif
 
-			int64_t q = n / (d | 5);
+			int64_t q = VERSION >= 10 ? n / (d | 6) : n / (d | 5);
 			idx.as_qword(0) = n ^ q;
 			idx = scratchpad_ptr(d ^ q);
 		}
@@ -544,7 +544,7 @@ void cn_slow_hash<MEMORY,ITER,VERSION>::software_hash(const void* in, size_t len
 			asm volatile ("nop"); //Fix for RasPi3 ARM - maybe needed on armv8 
 #endif
 
-			int64_t q = n / (d | 5);
+			int64_t q = VERSION >= 10 ? n / (d | 6) : n / (d | 5);
 			idx.as_qword(0) = n ^ q;
 			idx = scratchpad_ptr(d ^ q);
 		}
@@ -573,3 +573,4 @@ void cn_slow_hash<MEMORY,ITER,VERSION>::software_hash(const void* in, size_t len
 
 template class cn_slow_hash<2*1024*1024, 0x80000, 0>;
 template class cn_slow_hash<4*1024*1024, 0x40000, 1>;
+template class cn_slow_hash<4*1024*1024, 0x40000, 2>;

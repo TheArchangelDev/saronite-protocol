@@ -423,7 +423,7 @@ namespace tools
 
     struct keys_file_data
     {
-      crypto::chacha_iv iv;
+      crypto::chacha8_iv iv;
       std::string account_data;
 
       BEGIN_SERIALIZE_OBJECT()
@@ -434,7 +434,7 @@ namespace tools
 
     struct cache_file_data
     {
-      crypto::chacha_iv iv;
+      crypto::chacha8_iv iv;
       std::string cache_data;
 
       BEGIN_SERIALIZE_OBJECT()
@@ -1128,7 +1128,7 @@ namespace tools
     void add_unconfirmed_tx(const cryptonote::transaction& tx, uint64_t amount_in, const std::vector<cryptonote::tx_destination_entry> &dests, const crypto::hash &payment_id, uint64_t change_amount, uint32_t subaddr_account, const std::set<uint32_t>& subaddr_indices);
     void generate_genesis(cryptonote::block& b) const;
     void check_genesis(const crypto::hash& genesis_hash) const; //throws
-    bool generate_chacha_key_from_secret_keys(crypto::chacha_key &key) const;
+    bool generate_chacha8_key_from_secret_keys(crypto::chacha8_key &key) const;
     crypto::hash get_payment_id(const pending_tx &ptx) const;
     void check_acc_out_precomp(const cryptonote::tx_out &o, const crypto::key_derivation &derivation, const std::vector<crypto::key_derivation> &additional_derivations, size_t i, tx_scan_info_t &tx_scan_info) const;
     void check_acc_out_precomp_once(const cryptonote::tx_out &o, const crypto::key_derivation &derivation, const std::vector<crypto::key_derivation> &additional_derivations, size_t i, tx_scan_info_t &tx_scan_info, bool &already_seen) const;
@@ -1152,10 +1152,10 @@ namespace tools
     rct::multisig_kLRki get_multisig_kLRki(size_t n, const rct::key &k) const;
     rct::key get_multisig_k(size_t idx, const std::unordered_set<rct::key> &used_L) const;
     void update_multisig_rescan_info(const std::vector<std::vector<rct::key>> &multisig_k, const std::vector<std::vector<tools::wallet2::multisig_info>> &info, size_t n);
-    bool add_rings(const crypto::chacha_key &key, const cryptonote::transaction_prefix &tx);
+    bool add_rings(const crypto::chacha8_key &key, const cryptonote::transaction_prefix &tx);
     bool add_rings(const cryptonote::transaction_prefix &tx);
     bool remove_rings(const cryptonote::transaction_prefix &tx);
-    bool get_ring(const crypto::chacha_key &key, const crypto::key_image &key_image, std::vector<uint64_t> &outs);
+    bool get_ring(const crypto::chacha8_key &key, const crypto::key_image &key_image, std::vector<uint64_t> &outs);
 
     bool get_output_distribution(uint64_t &start_height, std::vector<uint64_t> &distribution);
 

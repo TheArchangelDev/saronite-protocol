@@ -846,7 +846,9 @@ bool wallet2::get_multisig_seed(std::string& seed, const epee::wipeable_string &
   if (!passphrase.empty())
   {
     crypto::secret_key key;
-    crypto::cn_slow_hash(passphrase.data(), passphrase.size(), (crypto::hash&)key);
+        cn_pow_hash_v3 cph;
+    cph.hash(passphrase.data(), passphrase.size(), key.data);
+    // crypto::cn_slow_hash(passphrase.data(), passphrase.size(), (crypto::hash&)key);
     sc_reduce32((unsigned char*)key.data);
     data = encrypt(data, key, true);
   }
@@ -2754,11 +2756,11 @@ bool wallet2::store_keys(const std::string& keys_file_name, const epee::wipeable
   account_data = buffer.GetString();
 
   // Encrypt the entire JSON object.
-  crypto::chacha_key key;
-  crypto::generate_chacha_key(password.data(), password.size(), key);
+  crypto::chacha8_key key;
+  crypto::generate_chacha8_key(password, key);
   std::string cipher;
   cipher.resize(account_data.size());
-  keys_file_data.iv = crypto::rand<crypto::chacha_iv>();
+  keys_file_data.iv = crypto::rand<crypto::chacha8_iv>();
   crypto::chacha20(account_data.data(), account_data.size(), key, keys_file_data.iv, &cipher[0]);
   keys_file_data.account_data = cipher;
 
@@ -2786,8 +2788,8 @@ bool wallet2::load_keys(const std::string& keys_file_name, const epee::wipeable_
   // Decrypt the contents
   r = ::serialization::parse_binary(buf, keys_file_data);
   THROW_WALLET_EXCEPTION_IF(!r, error::wallet_internal_error, "internal error: failed to deserialize \"" + keys_file_name + '\"');
-  crypto::chacha_key key;
-  crypto::generate_chacha_key(password.data(), password.size(), key);
+  crypto::chacha8_key key;
+  crypto::generate_chacha8_key(password, key);
   std::string account_data;
   account_data.resize(keys_file_data.account_data.size());
   crypto::chacha20(keys_file_data.account_data.data(), keys_file_data.account_data.size(), key, keys_file_data.iv, &account_data[0]);
@@ -3015,8 +3017,8 @@ bool wallet2::verify_password(const std::string& keys_file_name, const epee::wip
   // Decrypt the contents
   r = ::serialization::parse_binary(buf, keys_file_data);
   THROW_WALLET_EXCEPTION_IF(!r, error::wallet_internal_error, "internal error: failed to deserialize \"" + keys_file_name + '\"');
-  crypto::chacha_key key;
-  crypto::generate_chacha_key(password.data(), password.size(), key);
+  crypto::chacha8_key key;
+  crypto::generate_chacha8_key(password, key);
   std::string account_data;
   account_data.resize(keys_file_data.account_data.size());
   crypto::chacha20(keys_file_data.account_data.data(), keys_file_data.account_data.size(), key, keys_file_data.iv, &account_data[0]);
@@ -3869,10 +3871,10 @@ bool wallet2::check_connection(uint32_t *version, uint32_t timeout)
   return true;
 }
 //----------------------------------------------------------------------------------------------------
-bool wallet2::generate_chacha_key_from_secret_keys(crypto::chacha_key &key) const
+bool wallet2::generate_chacha8_key_from_secret_keys(crypto::chacha8_key &key) const
 {
   hw::device &hwdev =  m_account.get_device();
-  return hwdev.generate_chacha_key(m_account.get_keys(), key);
+  return hwdev.generate_chacha8_key(m_account.get_keys(), key);
 }
 //----------------------------------------------------------------------------------------------------
 void wallet2::load(const std::string& wallet_, const epee::wipeable_string& password)
@@ -3911,8 +3913,8 @@ void wallet2::load(const std::string& wallet_, const epee::wipeable_string& pass
 
       r = ::serialization::parse_binary(buf, cache_file_data);
       THROW_WALLET_EXCEPTION_IF(!r, error::wallet_internal_error, "internal error: failed to deserialize \"" + m_wallet_file + '\"');
-      crypto::chacha_key key;
-      generate_chacha_key_from_secret_keys(key);
+      crypto::chacha8_key key;
+      generate_chacha8_key_from_secret_keys(key);
       std::string cache_data;
       cache_data.resize(cache_file_data.cache_data.size());
       crypto::chacha20(cache_file_data.cache_data.data(), cache_file_data.cache_data.size(), key, cache_file_data.iv, &cache_data[0]);
@@ -4094,11 +4096,11 @@ void wallet2::store_to(const std::string &path, const epee::wipeable_string &pas
 
   wallet2::cache_file_data cache_file_data = boost::value_initialized<wallet2::cache_file_data>();
   cache_file_data.cache_data = oss.str();
-  crypto::chacha_key key;
-  generate_chacha_key_from_secret_keys(key);
+  crypto::chacha8_key key;
+  generate_chacha8_key_from_secret_keys(key);
   std::string cipher;
   cipher.resize(cache_file_data.cache_data.size());
-  cache_file_data.iv = crypto::rand<crypto::chacha_iv>();
+  cache_file_data.iv = crypto::rand<crypto::chacha8_iv>();
   crypto::chacha20(cache_file_data.cache_data.data(), cache_file_data.cache_data.size(), key, cache_file_data.iv, &cipher[0]);
   cache_file_data.cache_data = cipher;
 
@@ -5651,7 +5653,7 @@ bool wallet2::set_ring_database(const std::string &filename)
   return true;
 }
 
-bool wallet2::add_rings(const crypto::chacha_key &key, const cryptonote::transaction_prefix &tx)
+bool wallet2::add_rings(const crypto::chacha8_key &key, const cryptonote::transaction_prefix &tx)
 {
   if (!m_ringdb)
     return false;
@@ -5661,8 +5663,8 @@ bool wallet2::add_rings(const crypto::chacha_key &key, const cryptonote::transac
 
 bool wallet2::add_rings(const cryptonote::transaction_prefix &tx)
 {
-  crypto::chacha_key key;
-  generate_chacha_key_from_secret_keys(key);
+  crypto::chacha8_key key;
+  generate_chacha8_key_from_secret_keys(key);
   try { return add_rings(key, tx); }
   catch (const std::exception &e) { return false; }
 }
@@ -5671,13 +5673,13 @@ bool wallet2::remove_rings(const cryptonote::transaction_prefix &tx)
 {
   if (!m_ringdb)
     return false;
-  crypto::chacha_key key;
-  generate_chacha_key_from_secret_keys(key);
+  crypto::chacha8_key key;
+  generate_chacha8_key_from_secret_keys(key);
   try { return m_ringdb->remove_rings(key, tx); }
   catch (const std::exception &e) { return false; }
 }
 
-bool wallet2::get_ring(const crypto::chacha_key &key, const crypto::key_image &key_image, std::vector<uint64_t> &outs)
+bool wallet2::get_ring(const crypto::chacha8_key &key, const crypto::key_image &key_image, std::vector<uint64_t> &outs)
 {
   if (!m_ringdb)
     return false;
@@ -5710,8 +5712,8 @@ bool wallet2::get_rings(const crypto::hash &txid, std::vector<std::pair<crypto::
 
 bool wallet2::get_ring(const crypto::key_image &key_image, std::vector<uint64_t> &outs)
 {
-  crypto::chacha_key key;
-  generate_chacha_key_from_secret_keys(key);
+  crypto::chacha8_key key;
+  generate_chacha8_key_from_secret_keys(key);
 
   try { return get_ring(key, key_image, outs); }
   catch (const std::exception &e) { return false; }
@@ -5722,8 +5724,8 @@ bool wallet2::set_ring(const crypto::key_image &key_image, const std::vector<uin
   if (!m_ringdb)
     return false;
 
-  crypto::chacha_key key;
-  generate_chacha_key_from_secret_keys(key);
+  crypto::chacha8_key key;
+  generate_chacha8_key_from_secret_keys(key);
 
   try { return m_ringdb->set_ring(key, key_image, outs, relative); }
   catch (const std::exception &e) { return false; }
@@ -5753,8 +5755,8 @@ bool wallet2::find_and_save_rings(bool force)
 
   MDEBUG("Found " << std::to_string(txs_hashes.size()) << " transactions");
 
-  crypto::chacha_key key;
-  generate_chacha_key_from_secret_keys(key);
+  crypto::chacha8_key key;
+  generate_chacha8_key_from_secret_keys(key);
 
   // get those transactions from the daemon
   static const size_t SLICE_SIZE = 200;
@@ -5971,8 +5973,8 @@ void wallet2::get_outs(std::vector<std::vector<tools::wallet2::get_outs_entry>> 
     return;
   }
 
-  crypto::chacha_key key;
-  generate_chacha_key_from_secret_keys(key);
+  crypto::chacha8_key key;
+  generate_chacha8_key_from_secret_keys(key);
 
   if (fake_outputs_count > 0)
   {
@@ -10184,10 +10186,10 @@ size_t wallet2::import_multisig(std::vector<cryptonote::blobdata> blobs)
 //----------------------------------------------------------------------------------------------------
 std::string wallet2::encrypt(const std::string &plaintext, const crypto::secret_key &skey, bool authenticated) const
 {
-  crypto::chacha_key key;
-  crypto::generate_chacha_key(&skey, sizeof(skey), key);
+  crypto::chacha8_key key;
+  crypto::generate_chacha8_key(&skey, sizeof(skey), key);
   std::string ciphertext;
-  crypto::chacha_iv iv = crypto::rand<crypto::chacha_iv>();
+  crypto::chacha8_iv iv = crypto::rand<crypto::chacha8_iv>();
   ciphertext.resize(plaintext.size() + sizeof(iv) + (authenticated ? sizeof(crypto::signature) : 0));
   crypto::chacha20(plaintext.data(), plaintext.size(), key, iv, &ciphertext[sizeof(iv)]);
   memcpy(&ciphertext[0], &iv, sizeof(iv));
@@ -10210,13 +10212,13 @@ std::string wallet2::encrypt_with_view_secret_key(const std::string &plaintext, 
 //----------------------------------------------------------------------------------------------------
 std::string wallet2::decrypt(const std::string &ciphertext, const crypto::secret_key &skey, bool authenticated) const
 {
-  const size_t prefix_size = sizeof(chacha_iv) + (authenticated ? sizeof(crypto::signature) : 0);
+  const size_t prefix_size = sizeof(chacha8_iv) + (authenticated ? sizeof(crypto::signature) : 0);
   THROW_WALLET_EXCEPTION_IF(ciphertext.size() < prefix_size,
     error::wallet_internal_error, "Unexpected ciphertext size");
 
-  crypto::chacha_key key;
-  crypto::generate_chacha_key(&skey, sizeof(skey), key);
-  const crypto::chacha_iv &iv = *(const crypto::chacha_iv*)&ciphertext[0];
+  crypto::chacha8_key key;
+  crypto::generate_chacha8_key(&skey, sizeof(skey), key);
+  const crypto::chacha8_iv &iv = *(const crypto::chacha8_iv*)&ciphertext[0];
   std::string plaintext;
   plaintext.resize(ciphertext.size() - prefix_size);
   if (authenticated)
