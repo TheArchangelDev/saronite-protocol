@@ -1227,8 +1227,9 @@ namespace cryptonote
     return p;
   }
   //---------------------------------------------------------------
-  bool get_block_longhash(const block& b, crypto::hash& res, uint64_t height)
+  bool get_block_longhash(const block& b, cn_pow_hash_v3 &ctx, crypto::hash& res)
   {
+	block b_local = b; //workaround to avoid const errors with do_serialize
     blobdata bd = get_block_hashing_blob(b);
     const int cn_variant = b.major_version >= 7 ? b.major_version - 6 : 0;
 	
