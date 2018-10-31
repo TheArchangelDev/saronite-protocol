@@ -1236,7 +1236,7 @@ namespace cryptonote
 	  	if(b_local.major_version < CRYPTONOTE_POW_BLOCK_VERSION)
   	{
   		cn_pow_hash_v2 ctx_v2 = cn_pow_hash_v2::make_borrowed(ctx);
-  		ctx_v1.hash(bd.data(), bd.size(), res.data, cn_variant);
+  		ctx_v2.hash(bd.data(), bd.size(), res.data, cn_variant);
   	}
   	else
   	{
