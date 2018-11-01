@@ -98,7 +98,7 @@ namespace crypto {
 	{
       ctx1.hash(data, length, hash.data, true);
     } 
-	else if (variant =< 5) 
+	else if (variant == 1) 
 	{
       ctx2.hash(data, length, hash.data, true);
     } 
