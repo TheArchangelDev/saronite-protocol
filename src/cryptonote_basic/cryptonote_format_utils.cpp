@@ -1230,7 +1230,22 @@ namespace cryptonote
   bool get_block_longhash(const block& b, crypto::hash& res, uint64_t height)
   {
     blobdata bd = get_block_hashing_blob(b);
-    const int cn_variant = b.major_version >= 7 ? b.major_version - 6 : 0;
+    const int cn_variant;
+	if (b.major_version < 7)
+	{
+		cn_variant = 0;
+	}
+	else 
+	{
+	if (b.major_version =< 9)
+	{
+		cn_variant = 1;
+	}
+	else (b.major_version >= 10)
+	{
+		cn_variant = 2;
+	}
+	}
     crypto::cn_slow_hash(bd.data(), bd.size(), res, cn_variant);
     return true;
   }

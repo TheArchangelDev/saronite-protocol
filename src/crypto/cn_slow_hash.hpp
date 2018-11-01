@@ -164,7 +164,7 @@ static cn_pow_hash_v1 make_borrowed_v1(cn_pow_hash_v3& t)
 		return cn_pow_hash_v1(t.lpad.as_void(), t.spad.as_void());
 	}
 
-	static cn_pow_hash_v2 make_borrowed_v2(cn_pow_hash_v3& t)
+static cn_pow_hash_v2 make_borrowed_v2(cn_pow_hash_v3& t)
 	{
 		return cn_pow_hash_v2(t.lpad.as_void(), t.spad.as_void());
 	}
