@@ -72,6 +72,42 @@ namespace crypto {
     return h;
   }
 
+  inline void cn_slow_hash(const void *data, std::size_t length, hash &hash, int variant = 0) {
+	static thread_local cn_pow_hash_v3 ctx3;
+	static thread_local cn_pow_hash_v2 ctx2 = cn_pow_hash_v3::make_borrowed_v2(ctx3);
+    static thread_local cn_pow_hash_v1 ctx1 = cn_pow_hash_v3::make_borrowed_v1(ctx2);
+    if (variant == 0) 
+	{
+      ctx1.hash(data, length, hash.data, true);
+    } 
+	else if (variant =< 5) 
+	{
+      ctx2.hash(data, length, hash.data, true);
+    } 
+	else 
+	{
+	  ctx3.hash(data, length, hash.data, true);
+	}
+  }
+
+  inline void cn_slow_hash_prehashed(const void *data, std::size_t length, hash &hash, int variant = 0) {
+	static thread_local cn_pow_hash_v3 ctx3;
+	static thread_local cn_pow_hash_v2 ctx2 = cn_pow_hash_v3::make_borrowed_v2(ctx3);
+    static thread_local cn_pow_hash_v1 ctx1 = cn_pow_hash_v3::make_borrowed_v1(ctx2);
+    if (variant == 0) 
+	{
+      ctx1.hash(data, length, hash.data, true);
+    } 
+	else if (variant =< 5) 
+	{
+      ctx2.hash(data, length, hash.data, true);
+    } 
+	else 
+	{
+	  ctx3.hash(data, length, hash.data, true);
+	}
+  }
+
   inline void tree_hash(const hash *hashes, std::size_t count, hash &root_hash) {
     tree_hash(reinterpret_cast<const char (*)[HASH_SIZE]>(hashes), count, reinterpret_cast<char *>(&root_hash));
   }

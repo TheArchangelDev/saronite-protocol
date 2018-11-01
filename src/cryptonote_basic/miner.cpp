@@ -377,11 +377,10 @@ namespace cryptonote
   //-----------------------------------------------------------------------------------------------------
   bool miner::find_nonce_for_given_block(block& bl, const difficulty_type& diffic, uint64_t height)
   {
-	cn_pow_hash_v2 hash_ctx;
     for(; bl.nonce != std::numeric_limits<uint32_t>::max(); bl.nonce++)
     {
       crypto::hash h;
-      get_block_longhash(bl, hash_ctx, h);
+      get_block_longhash(bl, h, height);
 
       if(check_hash(h, diffic))
       {
@@ -437,8 +436,6 @@ namespace cryptonote
     difficulty_type local_diff = 0;
     uint32_t local_template_ver = 0;
     block b;
-    cn_pow_hash_v3 hash_ctx;
-
     while(!m_stop)
     {
       if(m_pausers_count)//anti split workaround
@@ -480,7 +477,7 @@ namespace cryptonote
 
       b.nonce = nonce;
       crypto::hash h;
-      get_block_longhash(b, hash_ctx, h);
+      get_block_longhash(b, h, height);
 
       if(check_hash(h, local_diff))
       {
